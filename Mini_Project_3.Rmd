@@ -1,0 +1,16 @@
+---
+title: "Mini_Project_3"
+output: html_document
+---
+
+```{r, message=FALSE}
+#library----
+library(tidyverse)
+library(sf)
+library(macleish)
+```
+
+```{r, message=FALSE}
+names(macleish_layers)
+```
+
