@@ -13,7 +13,26 @@ library(macleish)
 ```{r, message=FALSE}
 names(macleish_layers)
 
+trails_view <-view(macleish_layers[["trails"]])
 contour_30ft_view <- view(macleish_layers[["contours_30ft"]])
 contour_3m_view <- view(macleish_layers[["contours_3m"]])
 ```
+
+```{r}
+trails_contour_join<-st_join(trails_view,contour_3m_view,join = st_intersects,left=TRUE)
+```
+
+```{r}
+trails  <-trails_contour_join %>%
+  group_by(name) %>%
+  summarize(N = n())
+```
+
+```{r}
+ggplot(trails)+
+  geom_sf()
+```
+
+
+
 
