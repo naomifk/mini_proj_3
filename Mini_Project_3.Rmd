@@ -12,5 +12,8 @@ library(macleish)
 
 ```{r, message=FALSE}
 names(macleish_layers)
+
+contour_30ft_view <- view(macleish_layers[["contours_30ft"]])
+contour_3m_view <- view(macleish_layers[["contours_3m"]])
 ```
 
