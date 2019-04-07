@@ -25,7 +25,7 @@ trails_contour_join<-st_join(trails_view,contour_3m_view,join = st_intersects,le
 ```{r}
 trails  <-trails_contour_join %>%
   group_by(name) %>%
-  summarize(N = n())
+  summarize(N = n(), mean_elevation=mean(ELEV_FT,na.rm = TRUE),SHAPE_LEN=sum(SHAPE_LEN,na.rm = TRUE))
 ```
 
 ```{r}
@@ -33,15 +33,11 @@ ggplot(trails)+
   geom_sf()
 ```
 
-```{r}
-elevation <- mass_gis()
 
-macleish_elevation <- macleish_intersect(elevation)
-if (require(sf)) {
-  plot(macleish_elevation)
-}
 
-```
+
+
+
 
 
 
