@@ -23,7 +23,7 @@ trails_contour_join<-st_join(trails_view,contour_3m_view,join = st_intersects,le
 ```
 
 ```{r}
-trails  <-trails_contour_join %>%
+trails_grouped  <-trails_contour_join %>%
   group_by(name) %>%
   summarize(N = n(), mean_elevation=mean(ELEV_FT,na.rm = TRUE),SHAPE_LEN=sum(SHAPE_LEN,na.rm = TRUE))
 ```
