@@ -25,13 +25,31 @@ trails_contour_join<-st_join(trails_view,contour_3m_view,join = st_intersects,le
 ```{r}
 trails_grouped  <-trails_contour_join %>%
   group_by(name) %>%
-  summarize(N = n(), mean_elevation=mean(ELEV_FT,na.rm = TRUE),SHAPE_LEN=sum(SHAPE_LEN,na.rm = TRUE))
+  summarize(N = n(), max_elevation=max(ELEV_FT,na.rm = TRUE),SHAPE_LEN=sum(SHAPE_LEN,na.rm = TRUE),min_elevation=min(ELEV_FT,na.rm = TRUE)) %>% 
+  mutate(SHD_number=(sqrt((max_elevation-min_elevation)*2*(SHAPE_LEN*0.000189394))))
 ```
 
 ```{r}
-ggplot(trails)+
-  geom_sf()
+trails_level_function <-function(trail_arg) {
+  trails_grouped %>% 
+    filter(name==trail_arg)%>%
+    select(SHD_number) %>% 
+    if(SHD_number<50) {
+      return("Easy")
+    }
+  else if (50<=SHD_number<100) {
+    return("Moderate")
+  }
+  else {
+    return("Difficult")
+  }
+  }
+  
 ```
+
+
+
+
 
 
 
