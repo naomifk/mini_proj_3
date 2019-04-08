@@ -1,6 +1,8 @@
 ---
 title: "Mini_Project_3"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
 ---
 
 ```{r, message=FALSE}
@@ -18,33 +20,43 @@ contour_30ft_view <- view(macleish_layers[["contours_30ft"]])
 contour_3m_view <- view(macleish_layers[["contours_3m"]])
 ```
 
-```{r}
+```{r, message=FALSE}
 trails_contour_join<-st_join(trails_view,contour_3m_view,join = st_intersects,left=TRUE)
 ```
 
-```{r}
+```{r, message=FALSE}
 trails_grouped  <-trails_contour_join %>%
   group_by(name) %>%
   summarize(N = n(), max_elevation=max(ELEV_FT,na.rm = TRUE),SHAPE_LEN=sum(SHAPE_LEN,na.rm = TRUE),min_elevation=min(ELEV_FT,na.rm = TRUE)) %>% 
   mutate(SHD_number=(sqrt((max_elevation-min_elevation)*2*(SHAPE_LEN*0.000189394))))
 ```
 
-```{r}
-trails_level_function <-function(trail_arg) {
-  trails_grouped %>% 
-    filter(name==trail_arg)%>%
-    select(SHD_number) %>% 
-    if(SHD_number<50) {
-      return("Easy")
-    }
-  else if (50<=SHD_number<100) {
-    return("Moderate")
-  }
-  else {
-    return("Difficult")
-  }
-  }
-  
+```{r, message=FALSE}
+#remove geometry from trails df
+trails_df <- `st_geometry<-`(trails_grouped, NULL)
+
+#function to define trail difficulty according to SHD
+difficulty_function <- function(trail_arg) {
+  #select and filter so only SHD_number remains
+ SHD_num <- trails_df %>%
+    filter(name == trail_arg) %>% 
+      select(SHD_number) %>% 
+   #convert from tibble to vector
+    pull(SHD_number)
+ #if/else statements to define difficulty
+ if(SHD_num<50) {
+   return("Easy")
+ }
+ else if (SHD_num>=50 & SHD_num<100){
+   return("Moderate")
+ }
+ else {
+   return("Difficult")
+ }
+}
+
+difficulty_function("Snowmobile Trail")
+difficulty_function("Driveway")
 ```
 
 
