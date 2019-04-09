@@ -6,10 +6,11 @@ output:
 ---
 
 ```{r, message=FALSE}
-#library----
+#libraries----
 library(tidyverse)
 library(sf)
 library(macleish)
+library(leaflet)
 ```
 
 ```{r, message=FALSE}
@@ -28,7 +29,11 @@ trails_contour_join<-st_join(trails_view,contour_3m_view,join = st_intersects,le
 trails_grouped  <-trails_contour_join %>%
   group_by(name) %>%
   summarize(N = n(), max_elevation=max(ELEV_FT,na.rm = TRUE),SHAPE_LEN=sum(SHAPE_LEN,na.rm = TRUE),min_elevation=min(ELEV_FT,na.rm = TRUE)) %>% 
-  mutate(SHD_number=(sqrt((max_elevation-min_elevation)*2*(SHAPE_LEN*0.000189394))))
+  mutate(SHD_number=(sqrt((max_elevation-min_elevation)*2*(SHAPE_LEN*0.000189394))))%>% 
+  mutate(difficulty = ifelse(SHD_number < 50, "Easy",
+              ifelse(SHD_number < 100, "Moderate", 
+              ifelse(SHD_number < 150, "Difficult",
+                     "N/A"))))
 ```
 
 ```{r, message=FALSE}
@@ -56,9 +61,26 @@ difficulty_function <- function(trail_arg) {
 }
 
 difficulty_function("Snowmobile Trail")
-difficulty_function("Driveway")
+difficulty_function(c("Driveway", "Easy Out"))
+
+trails_grouped_mutate <- trails_grouped %>% 
+  mutate(difficulty = difficulty_function(name))
 ```
 
+```{r}
+
+boundary <- macleish_layers %>%
+  pluck("boundary")
+
+trails_inside <- boundary %>%
+  st_intersection(trails_grouped)
+
+macleish_map <- leaflet() %>%
+  addTiles() %>%
+  addPolygons(data = boundary, weight = 1)
+macleish_map %>%
+  addPolylines(data = trails_inside)
+```
 
 
 
