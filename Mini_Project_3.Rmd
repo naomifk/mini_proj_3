@@ -36,36 +36,6 @@ trails_grouped  <-trails_contour_join %>%
                      "N/A"))))
 ```
 
-```{r, message=FALSE}
-#remove geometry from trails df
-trails_df <- `st_geometry<-`(trails_grouped, NULL)
-
-#function to define trail difficulty according to SHD
-difficulty_function <- function(trail_arg) {
-  #select and filter so only SHD_number remains
- SHD_num <- trails_df %>%
-    filter(name == trail_arg) %>% 
-      select(SHD_number) %>% 
-   #convert from tibble to vector
-    pull(SHD_number)
- #if/else statements to define difficulty
- if(SHD_num<50) {
-   return("Easy")
- }
- else if (SHD_num>=50 & SHD_num<100){
-   return("Moderate")
- }
- else {
-   return("Difficult")
- }
-}
-
-difficulty_function("Snowmobile Trail")
-difficulty_function(c("Driveway", "Easy Out"))
-
-trails_grouped_mutate <- trails_grouped %>% 
-  mutate(difficulty = difficulty_function(name))
-```
 
 ```{r}
 pal <- colorFactor(c("#16a027","#FFFF00"),
@@ -87,8 +57,10 @@ trails_inside <- boundary %>%
 macleish_map <- leaflet() %>%
   addTiles() %>%
   addPolygons(data = boundary, weight = 1)
+
 map_color<-macleish_map %>%
-  addPolylines(data = trails_inside,color = ~pal(difficulty))
+  addPolylines(data = trails_inside,color = ~pal(difficulty))%>%
+  addPolylines(data = )
 
 map_color
 ```
