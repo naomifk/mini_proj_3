@@ -68,6 +68,16 @@ trails_grouped_mutate <- trails_grouped %>%
 ```
 
 ```{r}
+pal <- colorNumeric(c("Yellow","Red"),
+ trails_grouped %>%
+ pull(difficulty) 
+ 
+)
+```
+
+
+```{r}
+
 
 boundary <- macleish_layers %>%
   pluck("boundary")
@@ -78,8 +88,10 @@ trails_inside <- boundary %>%
 macleish_map <- leaflet() %>%
   addTiles() %>%
   addPolygons(data = boundary, weight = 1)
-macleish_map %>%
-  addPolylines(data = trails_inside)
+map_color<-macleish_map %>%
+  addPolylines(data = trails_inside,color = ~pal(difficulty))
+
+
 ```
 
 
