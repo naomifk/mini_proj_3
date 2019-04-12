@@ -56,11 +56,11 @@ trails_inside <- boundary %>%
 
 macleish_map <- leaflet() %>%
   addTiles() %>%
-  addPolygons(data = boundary, weight = 1)
+  addPolygons(data = boundary, weight = 1.25, fillColor= "#E4FAFF")
 
 map_color<-macleish_map %>%
-  addPolylines(data = trails_inside,color = ~pal(difficulty))%>%
-  addPolylines(data = )
+  addPolylines(data = contour_3m_view, weight = .5) %>% 
+  addPolylines(data = trails_inside,color = ~pal(difficulty))
 
 map_color
 ```
