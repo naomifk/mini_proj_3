@@ -1,10 +1,10 @@
 ---
-title: "Mini_Project_3"
+title: "Mini Project 3"
 output: 
   html_document:
     code_folding: hide
 ---
-
+Abby Allen and Naomi Forman-Katz
 ```{r, message=FALSE}
 #libraries----
 library(tidyverse)
@@ -16,11 +16,10 @@ library(rgdal)
 ```
 
 ```{r, message=FALSE}
-names(macleish_layers)
 
-trails_view <-view(macleish_layers[["trails"]])
-contour_30ft_view <- view(macleish_layers[["contours_30ft"]])
-contour_3m_view <- view(macleish_layers[["contours_3m"]])
+trails_view <-pluck(macleish_layers[["trails"]])
+contour_30ft_view <- pluck(macleish_layers[["contours_30ft"]])
+contour_3m_view <- pluck(macleish_layers[["contours_3m"]])
 ```
 
 ```{r, message=FALSE}
@@ -39,7 +38,7 @@ trails_grouped  <-trails_contour_join %>%
 ```
 
 
-```{r}
+```{r, message=FALSE}
 pal <- colorFactor(c("#16a027","#FFFF00"),
  trails_grouped %>%
  pull(difficulty) 
@@ -48,7 +47,7 @@ pal <- colorFactor(c("#16a027","#FFFF00"),
 ```
 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 
 boundary <- macleish_layers %>%
   pluck("boundary")
