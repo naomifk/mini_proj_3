@@ -11,6 +11,8 @@ library(tidyverse)
 library(sf)
 library(macleish)
 library(leaflet)
+library(rgdal)
+
 ```
 
 ```{r, message=FALSE}
@@ -54,13 +56,15 @@ boundary <- macleish_layers %>%
 trails_inside <- boundary %>%
   st_intersection(trails_grouped)
 
-macleish_map <- leaflet() %>%
+macleish_map <- leaflet(trails_inside) %>%
   addTiles() %>%
   addPolygons(data = boundary, weight = 1.25, fillColor= "#E4FAFF")
 
 map_color<-macleish_map %>%
   addPolylines(data = contour_3m_view, weight = .5) %>% 
-  addPolylines(data = trails_inside,color = ~pal(difficulty))
+  addPolylines(data = trails_inside,color = ~pal(difficulty)) %>%  
+  addLegend("bottomright",pal = pal, values = ~difficulty, opacity = 1)
+
 
 map_color
 ```
