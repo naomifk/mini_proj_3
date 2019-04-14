@@ -69,6 +69,43 @@ map_color<-macleish_map %>%
 map_color
 ```
 
+```{r}
+x <- st_intersection(
+  pluck(macleish_layers, "trails"), 
+  pluck(macleish_layers, "contours_30ft")
+)
+western <- filter(x, name == "Western Loop")
+western_pts <- western %>% 
+  st_cast("MULTIPOINT") %>% 
+  st_cast("POINT")
+
+snowmobile <- filter(x, name == "Snowmobile Trail")
+snowmobile_pts <- snowmobile %>% 
+  st_cast("MULTIPOINT") %>% 
+  st_cast("POINT")
+
+eastern <- filter(x, name == "Eastern Loop")
+eastern_pts <- eastern %>% 
+  st_cast("MULTIPOINT")
+
+driveway <- filter(x, name == "Driveway")
+driveway_pts <- driveway %>% 
+  st_cast("MULTIPOINT") %>% 
+  st_cast("POINT")
+
+eastern_line <- eastern_pts %>% 
+  st_cast("LINESTRING")
+
+```
+
+```{r}
+trails <- macleish_layers %>%
+  pluck("trails") %>%
+  mutate(computed_length = st_length(geometry))
+
+```
+
+
 
 
 
