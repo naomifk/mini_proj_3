@@ -49,15 +49,6 @@ trails_grouped  <-trails_contour_join %>%
 ```
 
 
-```{r, message=FALSE}
-pal <- colorFactor(c("orange","green", "yellow"),
- trails_grouped %>%
- pull(difficulty) 
- 
-)
-```
-
-
 ```{r, message=FALSE, warning=FALSE}
 
 boundary <- macleish_layers %>%
@@ -69,55 +60,30 @@ trails_inside <- boundary %>%
 macleish_map <- leaflet(trails_inside) %>%
   addTiles() %>%
   addPolygons(data = boundary, weight = 1.25, fillColor= "#E4FAFF")
+```
 
+```{r, message=FALSE}
+trail_order <- factor(trails_inside$difficulty, labels = c("Easy", "Moderate", "Difficult"))
+
+pal <- colorFactor(c("yellow", "orange", "green"),
+  levels = trail_order,ordered=FALSE,
+ trails_grouped %>%
+ pull(difficulty) 
+ 
+)
+```
+
+```{r, message=FALSE}
 map_color<-macleish_map %>%
   addPolylines(data = contour_3m_view, weight = .5) %>% 
-  addPolylines(data = trails_inside,color = ~pal(difficulty),popup = ~name) %>%  
-  addLegend("bottomright",pal = pal, values = ~difficulty, opacity = 1) 
+  addPolylines(data = trails_inside, color = ~pal(difficulty),popup = ~name) %>%  
+  addLegend("bottomright", pal = pal, values = trail_order, opacity = 1) 
   
 
 
 map_color
 ```
 
-
-```{r}
-x <- st_intersection(
-  pluck(macleish_layers, "trails"), 
-  pluck(macleish_layers, "contours_30ft")
-)
-western <- filter(x, name == "Western Loop")
-western_pts <- western %>% 
-  st_cast("MULTIPOINT") %>% 
-  st_cast("POINT")
-
-snowmobile <- filter(x, name == "Snowmobile Trail")
-snowmobile_pts <- snowmobile %>% 
-  st_cast("MULTIPOINT") %>% 
-  st_cast("POINT")
-
-eastern <- filter(x, name == "Eastern Loop")
-eastern_pts <- eastern %>% 
-  st_cast("MULTIPOINT")
-
-driveway <- filter(x, name == "Driveway")
-driveway_pts <- driveway %>% 
-  st_cast("MULTIPOINT") %>% 
-  st_cast("POINT")
-
-eastern_line <- eastern_pts %>% 
-  st_cast("LINESTRING")
-
-```
-
-```{r}
-map_trails<- leaflet(trails_grouped) %>%
-  addTiles() %>%
-  addPolylines()  
-  
-
-map_trails
-```
 
 
 
