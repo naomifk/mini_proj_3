@@ -12,34 +12,44 @@ library(sf)
 library(macleish)
 library(leaflet)
 library(rgdal)
-
+library(lwgeom)
 ```
 
 ```{r, message=FALSE}
-
-trails_view <-pluck(macleish_layers[["trails"]])
 contour_30ft_view <- pluck(macleish_layers[["contours_30ft"]])
 contour_3m_view <- pluck(macleish_layers[["contours_3m"]])
 ```
 
-```{r, message=FALSE}
-trails_contour_join<-st_join(trails_view,contour_3m_view,join = st_intersects,left=TRUE)
+```{r}
+trails_length_test <- macleish_layers %>%
+  pluck("trails") %>%
+  mutate(computed_length = st_length(geometry))
+
+trails_length <- trails_length_test %>% 
+  group_by(name)%>%
+  summarize(N = n(), total_length=sum(computed_length))
 ```
 
 ```{r, message=FALSE}
+trails_contour_join<-st_join(trails_length,contour_3m_view,join = st_intersects,left=TRUE)
+```
+
+```{r, message=FALSE}
+trails_length$total_length <- as.numeric(str_extract(trails_length$total_length, "[0-9]+"))
+
 trails_grouped  <-trails_contour_join %>%
   group_by(name) %>%
-  summarize(N = n(), max_elevation=max(ELEV_FT,na.rm = TRUE),SHAPE_LEN=sum(SHAPE_LEN,na.rm = TRUE),min_elevation=min(ELEV_FT,na.rm = TRUE)) %>% 
-  mutate(SHD_number=(sqrt((max_elevation-min_elevation)*2*(SHAPE_LEN*0.000189394))))%>% 
-  mutate(difficulty = ifelse(SHD_number < 50, "Easy",
-              ifelse(SHD_number < 100, "Moderate", 
-              ifelse(SHD_number < 150, "Difficult",
+  summarize(N = n(), max_elevation=max(ELEV_FT,na.rm = TRUE),total_length=mean(total_length,na.rm = TRUE),min_elevation=min(ELEV_FT,na.rm = TRUE)) %>% 
+  mutate(SHD_number=(sqrt((max_elevation-min_elevation)*2*(total_length*0.000621371))))%>% 
+  mutate(difficulty = ifelse(SHD_number < 10, "Easy",
+              ifelse(SHD_number < 20, "Moderate", 
+              ifelse(SHD_number < 30, "Difficult",
                      "N/A"))))
 ```
 
 
 ```{r, message=FALSE}
-pal <- colorFactor(c("#16a027","#FFFF00"),
+pal <- colorFactor(c("orange","green", "yellow"),
  trails_grouped %>%
  pull(difficulty) 
  
@@ -67,6 +77,7 @@ map_color<-macleish_map %>%
 
 map_color
 ```
+
 
 ```{r}
 x <- st_intersection(
@@ -98,10 +109,11 @@ eastern_line <- eastern_pts %>%
 ```
 
 ```{r}
-trails <- macleish_layers %>%
-  pluck("trails") %>%
-  mutate(computed_length = st_length(geometry))
+map_trails<- leaflet(trails_grouped) %>%
+  addTiles() %>%
+  addPolylines()
 
+map_trails
 ```
 
 
