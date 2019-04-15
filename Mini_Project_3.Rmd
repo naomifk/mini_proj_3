@@ -31,11 +31,12 @@ trails_length <- trails_length_test %>%
 ```
 
 ```{r, message=FALSE}
+trails_length$total_length <- as.numeric(str_extract(trails_length$total_length, "[0-9]+"))
+
 trails_contour_join<-st_join(trails_length,contour_3m_view,join = st_intersects,left=TRUE)
 ```
 
 ```{r, message=FALSE}
-trails_length$total_length <- as.numeric(str_extract(trails_length$total_length, "[0-9]+"))
 
 trails_grouped  <-trails_contour_join %>%
   group_by(name) %>%
@@ -71,8 +72,9 @@ macleish_map <- leaflet(trails_inside) %>%
 
 map_color<-macleish_map %>%
   addPolylines(data = contour_3m_view, weight = .5) %>% 
-  addPolylines(data = trails_inside,color = ~pal(difficulty)) %>%  
-  addLegend("bottomright",pal = pal, values = ~difficulty, opacity = 1)
+  addPolylines(data = trails_inside,color = ~pal(difficulty),popup = ~name) %>%  
+  addLegend("bottomright",pal = pal, values = ~difficulty, opacity = 1) 
+  
 
 
 map_color
@@ -111,7 +113,8 @@ eastern_line <- eastern_pts %>%
 ```{r}
 map_trails<- leaflet(trails_grouped) %>%
   addTiles() %>%
-  addPolylines()
+  addPolylines()  
+  
 
 map_trails
 ```
