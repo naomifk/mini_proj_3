@@ -5,6 +5,9 @@ output:
     code_folding: hide
 ---
 Abby Allen and Naomi Forman-Katz
+
+**Problem Statement:** MacLeish Field Station, located in West Whately, Massachusetts, has approximately four miles of built trail for use by field station visitors. We would like to be able to classify these trails as “Easy,” “Moderate,” or “Difficult”, based on their length and change in elevation, so that visitors may be better able to assess which trail is right for them. In this project, we attempt to develop a heuristic that will assess the difficulty of any trail, and classify it accordingly.
+
 ```{r, message=FALSE}
 #libraries----
 library(tidyverse)
@@ -90,8 +93,6 @@ map_color <- macleish_map %>%
 map_color
 ```
 Click trails to see the trail name!
-
-**Problem Statement:** MacLeish Field Station, located in West Whately, Massachusetts, has approximately four miles of built trail for use by field station visitors. We would like to be able to classify these trails as “Easy,” “Moderate,” or “Difficult”, based on their length and change in elevation, so that visitors may be better able to assess which trail is right for them. In this project, we attempt to develop a heuristic that will assess the difficulty of any trail, and classify it accordingly.
 
 **Analysis:** In order to classify these trails in a user-friendly, non-arbitrary way, we first attempted to use an existing index, the Shenandoah Hiking Difficulty ^[https://www.nps.gov/shen/planyourvisit/how-to-determine-hiking-difficulty.htm], to classify the trails at MacLeish. The Shenandoah Hiking Difficulty index, abbreviated as SHD, assigns each trail in Shenandoah National Park a number rating, which is created by finding the square root of the trail’s elevation gain x 2 x distance (in miles). The SHD then assigns a rating:  Easiest is any number less than 50, Moderate is between 50 and 100, Moderately Strenuous is between 50-150, and so on. Because this is a known and accepted rating system, we decided to apply the same criteria to the trails at MacLeish.
 
