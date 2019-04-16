@@ -1,5 +1,5 @@
 ---
-title: "Mini Project 3"
+title: "With Great Trails Comes Great Responsibility"
 output: 
   html_document:
     code_folding: hide
@@ -16,41 +16,46 @@ library(lwgeom)
 ```
 
 ```{r, message=FALSE}
+#create countour dataframes----
 contour_30ft_view <- pluck(macleish_layers[["contours_30ft"]])
 contour_3m_view <- pluck(macleish_layers[["contours_3m"]])
 ```
 
 ```{r}
+#create trails dataframe and group by trail ----
 trails_length_test <- macleish_layers %>%
   pluck("trails") %>%
   mutate(computed_length = st_length(geometry))
 
 trails_length <- trails_length_test %>% 
   group_by(name)%>%
-  summarize(N = n(), total_length=sum(computed_length))
+  summarize(N = n(), total_length=sum(computed_length)) #compute trail length
 ```
 
 ```{r, message=FALSE}
+#remove units from length column and join trails and countour 3m ----
 trails_length$total_length <- as.numeric(str_extract(trails_length$total_length, "[0-9]+"))
 
-trails_contour_join<-st_join(trails_length,contour_3m_view,join = st_intersects,left=TRUE)
+trails_contour_join <- st_join(trails_length,contour_3m_view,join = st_intersects,left=TRUE)
 ```
 
 ```{r, message=FALSE}
-
-trails_grouped  <-trails_contour_join %>%
+#wrangle trail data ----
+trails_grouped  <- trails_contour_join %>%
   group_by(name) %>%
-  summarize(N = n(), max_elevation=max(ELEV_FT,na.rm = TRUE),total_length=mean(total_length,na.rm = TRUE),min_elevation=min(ELEV_FT,na.rm = TRUE)) %>% 
-  mutate(SHD_number=(sqrt((max_elevation-min_elevation)*2*(total_length*0.000621371))))%>% 
-  mutate(difficulty = ifelse(SHD_number < 10, "Easy",
-              ifelse(SHD_number < 20, "Moderate", 
-              ifelse(SHD_number < 30, "Difficult",
+  summarize(N = n(), max_elevation=max(ELEV_FT,na.rm = TRUE),total_length=mean(total_length,na.rm = TRUE),
+  min_elevation = min(ELEV_FT,na.rm = TRUE)) %>% 
+  #use the shenandoah difficulty formula  to compute the difficulty of the trails 
+  mutate(SHD_number=(sqrt((max_elevation-min_elevation) * 2 * (total_length*0.000621371)))) %>% 
+  mutate(difficulty = ifelse (SHD_number < 10, "Easy", #create a difficulty column 
+              ifelse (SHD_number < 20, "Moderate", 
+              ifelse (SHD_number < 30, "Difficult",
                      "N/A"))))
 ```
 
 
 ```{r, message=FALSE, warning=FALSE}
-
+#create and map the Macleish boundary ----
 boundary <- macleish_layers %>%
   pluck("boundary")
 
@@ -62,21 +67,22 @@ macleish_map <- leaflet(trails_inside) %>%
   addPolygons(data = boundary, weight = 1.25, fillColor= "#E4FAFF")
 ```
 
-```{r, message=FALSE}
-trail_order <- factor(trails_inside$difficulty, labels = c("Easy", "Moderate", "Difficult"))
+```{r, message=FALSE, warning=FALSE}
+#create the color palette ----
+trail_order <- factor(trails_inside$difficulty, labels = c("Easy", "Moderate", "Difficult")) #correct order of difficulty levels
 
-pal <- colorFactor(c("yellow", "orange", "green"),
+pal <- colorFactor(c("yellow", "orange", "green"), #
   levels = trail_order,ordered=FALSE,
- trails_grouped %>%
- pull(difficulty) 
- 
+  trails_grouped %>%
+  pull(difficulty) 
 )
 ```
 
-```{r, message=FALSE}
-map_color<-macleish_map %>%
+```{r, message=FALSE, warning=FALSE}
+#map trails with difficulty ----
+map_color <- macleish_map %>%
   addPolylines(data = contour_3m_view, weight = .5) %>% 
-  addPolylines(data = trails_inside, color = ~pal(difficulty),popup = ~name) %>%  
+  addPolylines(data = trails_inside, color = ~pal(difficulty),popup = ~name) %>%  #creates popups with trail names (mouse over the trails to see the trail name)
   addLegend("bottomright", pal = pal, values = trail_order, opacity = 1) 
   
 
@@ -84,7 +90,21 @@ map_color<-macleish_map %>%
 map_color
 ```
 
+**Problem Statement:** MacLeish Field Station, located in West Whately, Massachusetts, has approximately four miles of built trail for use by field station visitors. We would like to be able to classify these trails as “Easy,” “Moderate,” or “Difficult”, based on their length and change in elevation, so that visitors may be better able to assess which trail is right for them. In this project, we attempt to develop a heuristic that will assess the difficulty of any trail, and classify it accordingly.
 
+**Analysis:** In order to classify these trails in a user-friendly, non-arbitrary way, we first attempted to use an existing index, the Shenandoah Hiking Difficulty ^[https://www.nps.gov/shen/planyourvisit/how-to-determine-hiking-difficulty.htm], to classify the trails at MacLeish. The Shenandoah Hiking Difficulty index, abbreviated as SHD, assigns each trail in Shenandoah National Park a number rating, which is created by finding the square root of the trail’s elevation gain x 2 x distance (in miles). The SHD then assigns a rating:  Easiest is any number less than 50, Moderate is between 50 and 100, Moderately Strenuous is between 50-150, and so on. Because this is a known and accepted rating system, we decided to apply the same criteria to the trails at MacLeish.
+
+In order to apply the SHD to the trails at MacLeish, we calculated the length of each trail, and then found the intersection of data from the trails layer and the contours layer. With this new spacial dataframe, we were able to find the elevation gain in each trail. Using this information, we calculated the SHD of each trail. It turned out, however, because of the relatively stable elevation of the MacLeish trails, as well as their short length, that each trail would be classified as “Easiest” based on the SHD. It would not be helpful to have a trail rating system within MacLeish where each trail is rated the same, so we decided to alter the heuristic to be specific to MacLeish trails. Using the same number rating system as the SHD, we simply altered the categorical rating with our own classifications: below 10 became “Easy,” 10-20 was “Moderate,” and above 20 was “Difficult.” It is important to note that these ratings are relative to MacLeish: even the “Difficult” trail is not difficult per se, only compared to the difficulty of the other trails.
+
+By implementing this new trail rating system, CEEDS would allow hikers of all levels and abilities to feel comfortable coming to MacLeish, knowing that they could choose the level of the trail to hike. Hopefully, advertising this new trail rating system would bring new visitors to MacLeish, and make the trails more user-friendly to all.
+
+In order to implement these trail ratings, the staff at MacLeish will need create signage to communicate the trail ratings to the public. We believe that to appropriately communicate this trail rating system to the public, there should be one sign in the parking lot explaining the rating system, signs at the beginning of each trail with the trail name and color-coded difficulty level, and colors corresponding to the difficulty along the trail wherever the color of the trail is marked. For example, the Eastern Loop is already color-coded blue; wherever there is blue painted on the trees along the trail, we would suggest also painting the color corresponding to difficulty (in this case yellow), similar to the image shown below.
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Robl%C3%ADn%2C_turistick%C3%A1_trasa.jpg/220px-Robl%C3%ADn%2C_turistick%C3%A1_trasa.jpg)
+
+To implement this recommendation, CEEDS staff would need to purchase wood for the signs at the parking lot and at the trailheads, and paint to paint the signs and the trees according to difficulty. Routered wood generally costs between $25-50 per sign,^[www.dshs.texas.gov/wellness/resource/trail.pdf] so with nine trails (plus the parking lot sign) this would be between $250-500. However, these costs could be cut down by using recycled wood. Paint generally costs $15-30 per gallon, and we estimate needing one gallon of green paint, two of yellow, and one of orange, for a total of $60-120. In total, the cost could be as low as $300 to implement this trail rating system. We do not foresee any major roadblocks or environmental impacts. With enough CEEDS staff and interns working on creating these signs and adding the paint colors to the trails, it should take around a month to implement.^[https://github.com/naomifk/mini_proj_3]
+
+Word count: `r wordcountaddin::word_count()`
 
 
 
